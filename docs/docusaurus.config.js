@@ -52,7 +52,7 @@ const config = {
       mermaid: {
         theme: { light: 'neutral', dark: 'forest' },
         options: {
-          maxTextSize: 50,
+          maxTextSize: 90000,
         },
       },
       navbar: {
