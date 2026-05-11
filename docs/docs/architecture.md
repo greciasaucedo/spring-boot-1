@@ -29,7 +29,7 @@ C4Context
     Rel(estudiante, browser, "Accede via")
     Rel(browser, webapp, "HTTP + WebSocket")
     Rel(admin, webapp, "Administra y ejecuta")
-    Rel(webapp, h2, "Lee y escribe datos del partido")
+    Rel(webapp, h2, "Lee y escribe datos")
 ```
 
 ---
@@ -45,37 +45,33 @@ C4Container
     Person(usuario, "Usuario", "Navegador Web")
 
     Container_Boundary(sistema, "Panel de Partido en Vivo") {
-        Container(frontend, "Frontend React", "React 18 + Vite", "SPA que muestra el marcador y se suscribe a eventos WebSocket")
-        Container(backend, "Backend Spring Boot", "Java 17 + Spring Boot 3.x", "API REST + servidor WebSocket STOMP. Puerto 8080")
-        ContainerDb(db, "Base de Datos H2", "H2 in-memory", "Almacena partido y eventos durante la sesión activa")
+        Container(frontend, "Frontend React", "React 18 + Vite", "SPA con WebSocket STOMP, puerto 5173")
+        Container(backend, "Backend Spring Boot", "Java 17 + Spring Boot 3.x", "API REST + WebSocket STOMP, puerto 8080")
+        ContainerDb(db, "Base de Datos H2", "H2 in-memory", "Almacena partido y eventos en la sesión activa")
     }
 
     Rel(usuario, frontend, "Abre en navegador", "HTTP")
-    Rel(frontend, backend, "Carga inicial del partido", "HTTP REST")
-    Rel(frontend, backend, "Suscripción a actualizaciones", "WebSocket STOMP")
-    Rel(frontend, backend, "Envía cambios de marcador", "HTTP REST PUT")
-    Rel(backend, db, "Lee y persiste partido y eventos", "JPA / Hibernate")
+    Rel(frontend, backend, "Carga inicial", "HTTP REST")
+    Rel(frontend, backend, "Actualizaciones push", "WebSocket STOMP")
+    Rel(backend, db, "Persiste datos", "JPA / Hibernate")
 ```
 
 ---
 
-## Nivel 3 — Componentes
-
-### Backend
+## Nivel 3 — Componentes del Backend
 
 ```mermaid
 C4Component
     title Componentes: Backend Spring Boot
 
     Container_Boundary(be, "Spring Boot Application") {
-        Component(matchCtrl, "MatchController", "REST Controller", "GET /api/match · PUT /api/match/{id}")
-        Component(eventCtrl, "EventController", "REST Controller", "GET /api/events · POST /api/events")
-        Component(matchSvc, "MatchService", "Service", "Lógica: actualizar marcador, obtener partido activo")
-        Component(eventSvc, "EventService", "Service", "Lógica: guardar eventos, consultar historial")
+        Component(matchCtrl, "MatchController", "REST Controller", "GET /api/match, PUT /api/match/{id}")
+        Component(eventCtrl, "EventController", "REST Controller", "GET /api/events, POST /api/events")
+        Component(matchSvc, "MatchService", "Service", "Logica del partido y marcador")
+        Component(eventSvc, "EventService", "Service", "Logica de eventos")
         Component(wsNotifier, "WebSocketNotifier", "Component", "Broadcast a /topic/match/update y /topic/match/event")
-        Component(wsConfig, "WebSocketConfig", "Configuration", "Configura endpoint /ws/match y broker de mensajes")
-        Component(matchRepo, "MatchRepository", "JPA Repository", "CRUD sobre tabla match_state")
-        Component(eventRepo, "EventRepository", "JPA Repository", "CRUD sobre tabla events")
+        Component(matchRepo, "MatchRepository", "JPA Repository", "CRUD tabla match_state")
+        Component(eventRepo, "EventRepository", "JPA Repository", "CRUD tabla events")
     }
 
     ContainerDb(db, "H2 Database", "in-memory", "")
@@ -83,35 +79,35 @@ C4Component
     Rel(matchCtrl, matchSvc, "Delega")
     Rel(eventCtrl, eventSvc, "Delega")
     Rel(matchSvc, matchRepo, "Usa")
-    Rel(matchSvc, wsNotifier, "Notifica cambios")
+    Rel(matchSvc, wsNotifier, "Notifica")
     Rel(eventSvc, eventRepo, "Usa")
-    Rel(eventSvc, wsNotifier, "Notifica nuevos eventos")
-    Rel(matchRepo, db, "JDBC/JPA")
-    Rel(eventRepo, db, "JDBC/JPA")
+    Rel(eventSvc, wsNotifier, "Notifica")
+    Rel(matchRepo, db, "JPA")
+    Rel(eventRepo, db, "JPA")
 ```
 
-### Frontend
+---
+
+## Nivel 3 — Componentes del Frontend
 
 ```mermaid
 C4Component
     title Componentes: Frontend React
 
     Container_Boundary(fe, "React SPA") {
-        Component(app, "App.tsx", "React Component", "Componente raíz: gestiona estado global del partido")
-        Component(apiClient, "apiClient.ts", "Module", "Abstrae HTTP REST y WebSocket STOMP")
-        Component(scoreboard, "Scoreboard.tsx", "React Component", "Marcador y botones de acción")
+        Component(app, "App.tsx", "React Component", "Estado global del partido")
+        Component(apiClient, "apiClient.ts", "Module", "HTTP REST y WebSocket STOMP")
+        Component(scoreboard, "Scoreboard.tsx", "React Component", "Marcador y botones de accion")
         Component(eventFeed, "EventFeed.tsx", "React Component", "Lista de eventos del partido")
-        Component(newEventForm, "NewEventForm.tsx", "React Component", "Formulario para registrar eventos")
-        Component(scoreHistory, "ScoreHistory.tsx", "React Component", "Tarea A: Historial de cambios del marcador")
+        Component(scoreHistory, "ScoreHistory.tsx", "React Component", "Tarea A: Historial de cambios")
     }
 
     Container(be, "Backend Spring Boot", ":8080", "")
 
     Rel(app, apiClient, "Fetch y mutaciones")
-    Rel(app, scoreboard, "Props: match, callbacks")
-    Rel(app, eventFeed, "Props: events[]")
-    Rel(app, newEventForm, "Props: onAddEvent")
-    Rel(app, scoreHistory, "Props: history[]")
+    Rel(app, scoreboard, "Props")
+    Rel(app, eventFeed, "Props")
+    Rel(app, scoreHistory, "Props")
     Rel(apiClient, be, "HTTP REST + WebSocket STOMP")
 ```
 
@@ -125,15 +121,15 @@ sequenceDiagram
     participant S as Servidor Spring Boot
     participant B as Cliente React B
 
-    A->>S: GET /api/match (carga inicial)
-    S-->>A: JSON con estado del partido
+    A->>S: GET /api/match
+    S-->>A: JSON estado del partido
 
     A->>S: WebSocket CONNECT /ws/match
     B->>S: WebSocket CONNECT /ws/match
 
-    A->>S: PUT /api/match/1 { homeScore: 1 }
-    S->>A: WebSocket broadcast (match update)
-    S->>B: WebSocket broadcast (match update)
+    A->>S: PUT /api/match/1 · homeScore +1
+    S-->>A: broadcast /topic/match/update
+    S-->>B: broadcast /topic/match/update
 
     Note over A,B: Ambos clientes se actualizan en tiempo real
 ```
