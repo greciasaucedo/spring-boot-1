@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# Node
+docs/node_modules/
+docs/build/
+docs/.docusaurus/
+frontend/node_modules/
+
+# Java / Maven
+backend/target/
+*.class
+*.jar
+
+# Env
+.env.local
+.env
