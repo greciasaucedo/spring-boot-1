@@ -7,10 +7,10 @@ const config = {
   tagline: 'Documentación técnica — Spring Boot + React + WebSocket',
   favicon: 'img/favicon.ico',
 
-  url: 'https://YOUR_GITHUB_USERNAME.github.io',
+  url: 'https://greciasaucedo.github.io',
   baseUrl: '/spring-boot-1/',
 
-  organizationName: 'YOUR_GITHUB_USERNAME',
+  organizationName: 'greciasaucedo',
   projectName: 'spring-boot-1',
   trailingSlash: false,
 
@@ -69,7 +69,7 @@ const config = {
             label: 'Documentación',
           },
           {
-            href: 'https://github.com/YOUR_GITHUB_USERNAME/spring-boot-1',
+            href: 'https://github.com/greciasaucedo/spring-boot-1',
             label: 'GitHub',
             position: 'right',
           },
@@ -95,7 +95,7 @@ const config = {
           {
             title: 'Más',
             items: [
-              { label: 'GitHub', href: 'https://github.com/YOUR_GITHUB_USERNAME/spring-boot-1' },
+              { label: 'GitHub', href: 'https://github.com/greciasaucedo/spring-boot-1' },
             ],
           },
         ],
